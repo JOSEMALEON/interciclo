@@ -1,6 +1,46 @@
 import time
 import random
 import tkinter as tk
+import os
+
+# Ruta del archivo donde se guardarán las puntuaciones
+ruta_archivo = r"C:\Users\Medac\Desktop\Programa interciclo\puntuaciones.txt"
+print(f"Ruta del archivo: {ruta_archivo}")  # Verificar la ruta
+
+def guardar_puntuacion(tiempo):
+    """Guardar la puntuación en un archivo de texto en la ruta especificada"""
+    puntuacion = f"{tiempo:.3f}"  # Formato de 3 decimales
+    try:
+        # Crear el archivo si no existe
+        if not os.path.exists(ruta_archivo):
+            with open(ruta_archivo, "w") as archivo:
+                pass  # Solo crea el archivo si no existe
+        # Abrir el archivo en modo de adición (si no existe, se crea)
+        with open(ruta_archivo, "a") as archivo:
+            archivo.write(puntuacion + "\n")
+        print(f"Puntuación guardada: {puntuacion}")  # Verificar que la puntuación se guarda
+    except Exception as e:
+        print(f"Error al guardar la puntuación: {e}")
+
+def leer_y_ordenar_puntuaciones():
+    """Leer y ordenar las puntuaciones desde el archivo"""
+    try:
+        if os.path.exists(ruta_archivo):  # Comprobar si el archivo existe
+            with open(ruta_archivo, "r") as archivo:
+                puntuaciones = archivo.readlines()
+
+            # Convertir las puntuaciones a números flotantes y ordenarlas
+            puntuaciones = [float(p.strip()) for p in puntuaciones]
+            puntuaciones.sort()  # Ordenar de menor a mayor
+
+            # Imprimir las puntuaciones ordenadas
+            print("Puntuaciones ordenadas:")
+            for puntuacion in puntuaciones:
+                print(f"{puntuacion:.3f} segundos")
+        else:
+            print("El archivo no existe, aún no se han guardado puntuaciones.")
+    except Exception as e:
+        print(f"Error al leer las puntuaciones: {e}")
 
 def contador_solo_modo_continuo():
     """
@@ -52,6 +92,10 @@ def contador_solo_modo_continuo():
     detener = tk.BooleanVar(value=False)
     def detener_contador():
         detener.set(True)
+        print("Contador detenido.")  # Verificar si la función se llama
+        tiempo_final = time.time() - inicio  # Tiempo final al detener el contador
+        guardar_puntuacion(tiempo_final)  # Guardar la puntuación al detener el contador
+        leer_y_ordenar_puntuaciones()  # Llamar a la función para leer y mostrar las puntuaciones
 
     boton_detener = tk.Button(frame_boton, text="Detener", command=detener_contador, font=("Arial", 16), bg="SystemButtonFace")
     boton_detener.pack(side="left", padx=10)
@@ -113,6 +157,11 @@ def contador_solo_modo_continuo():
         segundos = int(tiempo_actual)
         milisegundos = int((tiempo_actual - segundos) * 1000)
         etiqueta.config(text=f"{segundos:02d}:{milisegundos:03d}")
+
+        # Guardar la puntuación cada vez que se detiene el contador
+        if detener.get():
+            print(f"Deteniendo el contador y guardando la puntuación...")  # Confirmar que la puntuación se guarda
+            guardar_puntuacion(tiempo_actual)
 
         # Programar la próxima actualización
         ventana.after(10, actualizar_contador, inicio)
